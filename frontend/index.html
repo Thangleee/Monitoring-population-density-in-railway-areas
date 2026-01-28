@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Railway Monitoring Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+
+    #warning-box {
+      margin-top: 15px;
+      padding: 15px;
+      width: 780px;
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+      border-radius: 8px;
+      color: white;
+    }
+
+    .normal {
+      background-color: #2ecc71; /* xanh */
+    }
+
+    .warning {
+      background-color: #f1c40f; /* vàng */
+      color: black;
+    }
+
+    .danger {
+      background-color: #e67e22; /* đỏ */
+    }
+    .critical {
+      background-color: #e74c3c;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Current People Density: <span id="density">0</span></h2>
+
+<div id="warning-box" class="normal">
+  NORMAL – Safe area
+</div>
+
+<canvas id="chart" width="800" height="400"></canvas>
+
+<script>
+const ctx = document.getElementById('chart').getContext('2d');
+
+const chartData = {
+  labels: [],
+  datasets: [{
+    label: 'People Density (ROI)',
+    data: [],
+    borderWidth: 2,
+    fill: false,
+    tension: 0.3
+  }]
+};
+
+const chart = new Chart(ctx, {
+  type: 'line',
+  data: chartData,
+  options: {
+    responsive: false,
+    animation: false,
+    scales: {
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Number of people'
+        }
+      },
+      x: {
+        title: {
+          display: true,
+          text: 'Time'
+        }
+      }
+    }
+  }
+});
+
+// ================== WARNING LOGIC ==================
+function updateWarning(density) {
+  const box = document.getElementById("warning-box");
+
+  if (density == 0) {
+    box.className = "normal";
+    box.innerText = "NORMAL – Safe area";
+  }
+  else if (density <= 2) {
+    box.className = "warning";
+        box.innerText = "WARNING – Potential risk detected";
+  }
+  else if (density <= 5) {
+    box.className = "danger";
+    box.innerText = "DANGER – High people density";
+  }
+  else {
+    box.className = "critical";
+    box.innerText = "CRITICAL – High risk! Immediate action required";
+  }
+}
+
+// ================== WebSocket ==================
+const ws = new WebSocket("ws://127.0.0.1:8765");
+
+ws.onopen = () => {
+  console.log("WebSocket connected");
+};
+
+ws.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+
+  document.getElementById("density").innerText = data.density;
+
+  updateWarning(data.density);
+
+  chartData.labels.push(data.time);
+  chartData.datasets[0].data.push(data.density);
+
+  if (chartData.labels.length > 30) {
+    chartData.labels.shift();
+    chartData.datasets[0].data.shift();
+  }
+
+  chart.update();
+};
+
+ws.onerror = (e) => {
+  console.error("WS error", e);
+};
+</script>
+
+</body>
+</html>
