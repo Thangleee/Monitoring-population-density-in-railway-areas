@@ -18,7 +18,6 @@ Hệ thống phát hiện, theo dõi và đếm người trong khu vực đườ
 ### 2.1 Clone repository
 ```bash
 git clone https://github.com/Thangleee/Monitoring-population-density-in-railway-areas.git
-cd Monitoring-population-density-in-railway-areas
 ```
 ### 2.2 Cài đặt thư viện
 ```
