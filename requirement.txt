@@ -4,3 +4,6 @@ requests
 torch
 ultralytics
 websockets
+fastapi
+uvicorn
+sqlalchemy
